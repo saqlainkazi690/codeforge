@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  username   String   @unique
+  avatarUrl  String?
+  cohortId   String?
+  createdAt  DateTime @default(now())
+  student    Student?
+}
+
+model Student {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  xp           Int      @default(0)
+  level        Int      @default(1)
+  eloRating    Int      @default(1000)
+  streakCount  Int      @default(0)
+  lastActive   DateTime @default(now())
+  settings     String   @default("{}") // SQLite doesn't have Json type, using String
+  user         User     @relation(fields: [userId], references: [id])
+  attempts     Attempt[]
+  achievements Achievement[]
+  skillStates  SkillState[]
+}
+
+model Challenge {
+  id           String   @id @default(cuid())
+  type         String   // quick_fire | deep_dive | boss | daily | duel
+  difficulty   Int      // 1-5
+  topic        String
+  bloomLevel   String
+  questionData String   // JSON string
+  xpReward     Int
+  attempts     Attempt[]
+}
+
+model Attempt {
+  id          String   @id @default(cuid())
+  studentId   String
+  challengeId String
+  score       Float    // 0.0 - 1.0
+  timeTaken   Int      // seconds
+  answerData  String   // JSON string
+  xpEarned    Int
+  createdAt   DateTime @default(now())
+  student     Student  @relation(fields: [studentId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+}
+
+model SkillState {
+  id                String   @id @default(cuid())
+  studentId         String
+  topic             String
+  masteryProbability Float   @default(0.1)
+  pLearn            Float   @default(0.3)
+  pGuess            Float   @default(0.25)
+  pSlip             Float   @default(0.1)
+  attemptCount      Int     @default(0)
+  updatedAt         DateTime @updatedAt
+  student           Student  @relation(fields: [studentId], references: [id])
+  @@unique([studentId, topic])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  studentId   String
+  badgeId     String
+  earnedAt    DateTime @default(now())
+  citationText String
+  student     Student  @relation(fields: [studentId], references: [id])
+}

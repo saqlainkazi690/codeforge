@@ -1,0 +1,5 @@
+{
+  "name": "DSA Forge",
+  "description": "Adaptive Mastery Engine for Data Structures & Algorithms",
+  "requestFramePermissions": ["geolocation"]
+}
